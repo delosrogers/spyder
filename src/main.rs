@@ -17,7 +17,7 @@ fn main() {
 
 fn interpret(code: Vec<&str>, debug: bool) -> Result<i64, ParseError> {
     // Stands for first language
-    let mut fl = Interpreter {
+    let mut vm = Interpreter {
         stack: Vec::new(),
         vars: Vec::new(),
         curr_instruction_idx: 0,
@@ -26,65 +26,65 @@ fn interpret(code: Vec<&str>, debug: bool) -> Result<i64, ParseError> {
         .into_iter()
         .map(|instruction_str| parse_instruction(instruction_str).expect("problem parsing"))
         .collect();
-    while fl.curr_instruction_idx < instructions.len() {
-        let instruction = &instructions[fl.curr_instruction_idx];
+    while vm.curr_instruction_idx < instructions.len() {
+        let instruction = &instructions[vm.curr_instruction_idx];
         if debug {
-            println!("stack {:?}", fl.stack);
-            println!("{}: {:?}", fl.curr_instruction_idx, instruction);
+            println!("stack {:?}", vm.stack);
+            println!("{}: {:?}", vm.curr_instruction_idx, instruction);
         }
         match instruction {
-            Push(val) => fl.stack.push(*val),
+            Push(val) => vm.stack.push(*val),
             Load => {
-                let source = fl.pop()?;
+                let source = vm.pop()?;
                 // TODO improve error handling
-                let val = fl.get_val(&source).unwrap();
-                fl.stack.push(val);
+                let val = vm.get_val(&source).unwrap();
+                vm.stack.push(val);
             }
             Store => {
-                let dest = fl.pop()?;
-                let val = fl.pop()?;
-                fl.set_val(dest, val);
+                let dest = vm.pop()?;
+                let val = vm.pop()?;
+                vm.set_val(dest, val);
             }
             Pop => {
-                fl.pop()?;
+                vm.pop()?;
             }
             Goto => {
-                let new_line = fl.pop()?;
+                let new_line = vm.pop()?;
                 // need to subtract 1 because i is incremented every time
-                fl.curr_instruction_idx = new_line as usize - 1;
+                vm.curr_instruction_idx = new_line as usize - 1;
             }
             GotoIfEqual => {
-                let new_line = fl.pop()?;
-                let sentinal = fl.pop()?;
+                let new_line = vm.pop()?;
+                let sentinal = vm.pop()?;
                 if sentinal == 0 {
-                    fl.curr_instruction_idx = new_line as usize - 1;
+                    vm.curr_instruction_idx = new_line as usize - 1;
                 }
             }
-            RePush => fl.stack.push(fl.last()?),
+            RePush => vm.stack.push(vm.last()?),
             Add => {
-                let arg1 = fl.pop()?;
-                let arg2 = fl.pop()?;
-                fl.stack.push(arg1 + arg2);
+                let arg1 = vm.pop()?;
+                let arg2 = vm.pop()?;
+                vm.stack.push(arg1 + arg2);
             }
             Sub => {
-                let arg1 = fl.pop()?;
-                let arg2 = fl.pop()?;
-                fl.stack.push(arg1 - arg2);
+                let arg1 = vm.pop()?;
+                let arg2 = vm.pop()?;
+                vm.stack.push(arg1 - arg2);
             }
             Mul => {
-                let arg1 = fl.pop()?;
-                let arg2 = fl.pop()?;
-                fl.stack.push(arg1 * arg2);
+                let arg1 = vm.pop()?;
+                let arg2 = vm.pop()?;
+                vm.stack.push(arg1 * arg2);
             }
             Div => {
-                let arg1 = fl.pop()?;
-                let arg2 = fl.pop()?;
-                fl.stack.push(arg1 / arg2);
+                let arg1 = vm.pop()?;
+                let arg2 = vm.pop()?;
+                vm.stack.push(arg1 / arg2);
             }
         }
-        fl.curr_instruction_idx += 1;
+        vm.curr_instruction_idx += 1;
     }
-    return fl.pop();
+    return vm.pop();
 }
 
 fn parse_instruction(str_instruction: &str) -> Result<Instruction, ParseError> {
