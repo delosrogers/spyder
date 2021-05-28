@@ -1,0 +1,24 @@
+Push 288
+RePush
+Push 2
+Store
+Push 28434232
+RePush
+Push 22
+GotoIfEqual
+Push -1
+Add
+RePush
+Push 1
+Store
+Push 23
+GotoIfEqual
+Push 2
+Load
+Add
+Push 1
+Load
+Push 8
+Goto
+Push 0
+RePush
