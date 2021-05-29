@@ -5,7 +5,7 @@ use nom::{
     character::complete::{alphanumeric1, digit1, line_ending},
     combinator::opt,
     error::{context, VerboseError},
-    multi::{self, many1},
+    multi::many1,
     sequence::{separated_pair, tuple},
     IResult,
 };
@@ -47,46 +47,11 @@ pub fn code(input: &str) -> Res<&str, Code> {
     })
 }
 
-#[test]
-fn test_code() {
-    let res = code("Goto END\r\n!![END] RePush");
-    assert_eq!(
-        res,
-        Ok((
-            "",
-            Code {
-                lines: vec![
-                    Statement::Goto("END"),
-                    Statement::LabeledIns(LabeledIns {
-                        label: "END",
-                        ins: RePush
-                    })
-                ]
-            }
-        ))
-    )
-}
-
 fn statement(input: &str) -> Res<&str, Statement> {
     context(
         "instruction",
         alt((labled_ins, goto, push, plain_statement)),
     )(input)
-}
-
-#[test]
-fn test_statement() {
-    let res = statement("!![END] Mul");
-    assert_eq!(
-        res,
-        Ok((
-            "",
-            Statement::LabeledIns(LabeledIns {
-                label: "END",
-                ins: Mul,
-            })
-        ))
-    )
 }
 
 fn labled_ins(input: &str) -> Res<&str, Statement> {
@@ -106,21 +71,6 @@ fn labled_ins(input: &str) -> Res<&str, Statement> {
             }),
         )
     })
-}
-
-#[test]
-fn test_labled_ins() {
-    let res = labled_ins("!![END] Mul");
-    assert_eq!(
-        res,
-        Ok((
-            "",
-            Statement::LabeledIns(LabeledIns {
-                label: "END",
-                ins: Mul,
-            })
-        ))
-    )
 }
 
 fn goto(input: &str) -> Res<&str, Statement> {
@@ -143,14 +93,6 @@ fn goto(input: &str) -> Res<&str, Statement> {
     })
 }
 
-#[test]
-fn test_goto() {
-    let mut res = goto("Goto END");
-    assert_eq!(res, Ok(("", Statement::Goto("END"))));
-    res = goto("GotoIfEqual TopOfLoop");
-    assert_eq!(res, Ok(("", Statement::GotoIfEqual("TopOfLoop"))));
-}
-
 fn push(input: &str) -> Res<&str, Statement> {
     context("push", separated_pair(tag("Push"), tag(" "), number))(input).map(
         |(next_input, res)| {
@@ -169,12 +111,6 @@ fn number(input: &str) -> Res<&str, i64> {
             (next_input, num * multiple)
         },
     )
-}
-
-#[test]
-fn test_push() {
-    let res = push("Push -50");
-    assert_eq!(res, Ok(("", Statement::Ins(Push(-50)))))
 }
 
 /// Parses parameter less instructions into Instruction
@@ -205,34 +141,76 @@ fn plain_statement(input: &str) -> Res<&str, Statement> {
                 "Sub" => Sub,
                 "Mul" => Mul,
                 "Div" => Div,
+                "NoOp" => NoOp,
                 _ => panic!("plain instruction tried to parse an non plain instruciton"),
             }),
         )
     })
 }
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_code() {
+        let res = code("Goto END\r\n!![END] RePush");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                Code {
+                    lines: vec![
+                        Statement::Goto("END"),
+                        Statement::LabeledIns(LabeledIns {
+                            label: "END",
+                            ins: RePush
+                        })
+                    ]
+                }
+            ))
+        )
+    }
 
-pub fn parse_instruction(str_instruction: &str) -> Result<Instruction, ExecError> {
-    let mut tokens = str_instruction.split_whitespace();
-    let first_word = match tokens.next() {
-        Some(string) => string,
-        None => return Err(ExecError::new("parse_instruction: empty line")),
-    };
-    let instruction = match first_word {
-        "Push" => match tokens.next() {
-            Some(num) => Instruction::Push(num.parse::<i64>().expect("not a number")),
-            None => return Err(ExecError::new("parse_instruction: no number to push")),
-        },
-        "Load" => Load,
-        "Store" => Store,
-        "Pop" => Pop,
-        "Goto" => Goto,
-        "GotoIfEqual" => GotoIfEqual,
-        "RePush" => RePush,
-        "Add" => Add,
-        "Sub" => Sub,
-        "Mul" => Mul,
-        "Div" => Div,
-        _ => return Err(ExecError::new(str_instruction)),
-    };
-    Ok(instruction)
+    #[test]
+    fn test_statement() {
+        let res = statement("!![END] Mul");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                Statement::LabeledIns(LabeledIns {
+                    label: "END",
+                    ins: Mul,
+                })
+            ))
+        )
+    }
+
+    #[test]
+    fn test_labled_ins() {
+        let res = labled_ins("!![END] Mul");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                Statement::LabeledIns(LabeledIns {
+                    label: "END",
+                    ins: Mul,
+                })
+            ))
+        )
+    }
+
+    #[test]
+    fn test_goto() {
+        let mut res = goto("Goto END");
+        assert_eq!(res, Ok(("", Statement::Goto("END"))));
+        res = goto("GotoIfEqual TopOfLoop");
+        assert_eq!(res, Ok(("", Statement::GotoIfEqual("TopOfLoop"))));
+    }
+
+    #[test]
+    fn test_push() {
+        let res = push("Push -50");
+        assert_eq!(res, Ok(("", Statement::Ins(Push(-50)))))
+    }
 }

@@ -35,6 +35,7 @@ pub enum Instruction {
     GotoIfEqual,
     // Pushes a second copy of what is at the top of the stack
     RePush,
+    NoOp,
     Add,
     Sub,
     Mul,

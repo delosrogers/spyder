@@ -89,6 +89,7 @@ impl Interpreter {
                     let arg2 = self.pop()?;
                     self.stack.push(arg1 / arg2);
                 }
+                NoOp => (),
             }
             self.curr_instruction_idx += 1;
         }
