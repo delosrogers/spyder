@@ -18,7 +18,9 @@ fn main() {
     let args = Cli::from_args();
     let file = fs::read_to_string(&args.path).expect("problem reading file");
     let contents: Vec<&str> = file.lines().collect();
-    let mut vm = Interpreter::new();
-    let result = vm.run(contents, args.debug);
-    println!("{:?}", result);
+    let parsed = parser::code(file.as_str()).expect("parser error").1;
+    println!("{:?}", parsed);
+    // let mut vm = Interpreter::new();
+    // let result = vm.run(contents, args.debug);
+    // println!("{:?}", result);
 }

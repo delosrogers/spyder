@@ -1,26 +1,28 @@
 use std::fmt;
+
+use nom;
 #[derive(Debug)]
-pub struct ParseError {
+pub struct ExecError {
     details: String,
 }
 
-impl ParseError {
+impl ExecError {
     pub fn new(details: &str) -> Self {
-        return ParseError {
+        return ExecError {
             details: details.to_string(),
         };
     }
 }
 
-impl fmt::Display for ParseError {
+impl fmt::Display for ExecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.details)
     }
 }
 
-impl std::error::Error for ParseError {}
+impl std::error::Error for ExecError {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Instruction {
     Push(i64),
     // pops source off of stack then pushes val onto stack

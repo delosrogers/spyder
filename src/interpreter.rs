@@ -1,5 +1,5 @@
 use crate::parser;
-use crate::types::{Instruction, Instruction::*, ParseError};
+use crate::types::{ExecError, Instruction, Instruction::*};
 
 pub struct Interpreter {
     pub stack: Vec<i64>,
@@ -7,18 +7,18 @@ pub struct Interpreter {
     pub curr_instruction_idx: usize,
 }
 impl Interpreter {
-    pub fn pop(&mut self) -> Result<i64, ParseError> {
+    pub fn pop(&mut self) -> Result<i64, ExecError> {
         match self.stack.pop() {
             Some(num) => Ok(num),
             None => Err(self.empty_stack_err()),
         }
     }
-    pub fn empty_stack_err(&self) -> ParseError {
+    pub fn empty_stack_err(&self) -> ExecError {
         let mut error_msg = "stack empty at line: ".to_owned();
         error_msg.push_str(self.curr_instruction_idx.to_string().as_str());
-        ParseError::new(error_msg.as_str())
+        ExecError::new(error_msg.as_str())
     }
-    pub fn get_val(&self, source: &i64) -> Result<i64, ParseError> {
+    pub fn get_val(&self, source: &i64) -> Result<i64, ExecError> {
         Ok(self.vars[*source as usize])
     }
     pub fn set_val(&mut self, dest: i64, val: i64) {
@@ -27,13 +27,13 @@ impl Interpreter {
         }
         self.vars[dest as usize] = val
     }
-    pub fn last(&self) -> Result<i64, ParseError> {
+    pub fn last(&self) -> Result<i64, ExecError> {
         match self.stack.last() {
             Some(num) => Ok(*num),
             None => Err(self.empty_stack_err()),
         }
     }
-    pub fn run(&mut self, code: Vec<&str>, debug: bool) -> Result<i64, ParseError> {
+    pub fn run(&mut self, code: Vec<&str>, debug: bool) -> Result<i64, ExecError> {
         let instructions: Vec<Instruction> = code
             .into_iter()
             .map(|instruction_str| {

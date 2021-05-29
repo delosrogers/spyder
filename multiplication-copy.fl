@@ -1,0 +1,21 @@
+Push 288
+RePush
+Push 2
+Store
+Push 28434232
+RePush
+GotoIfEqual ZEROEND
+!![TOPOFLOOP] Push -1
+Add
+RePush
+Push 1
+Store
+GotoIfEqual END
+Push 2
+Load
+Add
+Push 1
+Load
+Goto TOPOFLOOP
+!![ZEROEND] Push 0
+!![END] RePush

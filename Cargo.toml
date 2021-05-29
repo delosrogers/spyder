@@ -10,3 +10,4 @@ debug = true
 
 [dependencies]
 structopt = "0.3.21"
+nom = "6.1.2"
