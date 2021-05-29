@@ -25,7 +25,8 @@ pub enum Statement<'a> {
     // you cannot label a goto or goto if equal
     LabeledIns(LabeledIns<'a>),
     Goto(Label<'a>),
-    GotoIfEqual(Label<'a>),
+    GotoEqual(Label<'a>),
+    // Call(Label<'a>),
 }
 
 pub type Label<'a> = &'a str;
@@ -81,24 +82,31 @@ fn goto(input: &str) -> Res<&str, Statement> {
     context(
         "goto or goto if equal",
         alt((
-            separated_pair(tag("Goto"), tag(" "), alphanumeric1),
-            separated_pair(tag("GotoIfEqual"), tag(" "), alphanumeric1),
+            separated_pair(tag("goto"), tag(" "), alphanumeric1),
+            separated_pair(tag("gotoEqual"), tag(" "), alphanumeric1),
         )),
     )(input)
     .map(|(next_input, res)| {
         (
             next_input,
             match res.0 {
-                "Goto" => Statement::Goto(res.1),
-                "GotoIfEqual" => Statement::GotoIfEqual(res.1),
+                "goto" => Statement::Goto(res.1),
+                "gotoEqual" => Statement::GotoEqual(res.1),
                 _ => panic!("goto parser tried to parse non goto or gotoifequal"),
             },
         )
     })
 }
 
+// fn call(input: &str) -> Res<&str, Statement> {
+//     context(
+//         "call"
+//         tuple( )
+//     )
+// }
+
 fn push(input: &str) -> Res<&str, Statement> {
-    context("push", separated_pair(tag("Push"), tag(" "), number))(input).map(
+    context("push", separated_pair(tag("push"), tag(" "), number))(input).map(
         |(next_input, res)| {
             let num = res.1;
             (next_input, Statement::Ins(Push(num)))
@@ -123,30 +131,30 @@ fn plain_statement(input: &str) -> Res<&str, Statement> {
     context(
         "plain instruction",
         alt((
-            tag("Load"),
-            tag("Store"),
-            tag("Pop"),
-            tag("RePush"),
-            tag("NoOp"),
-            tag("Add"),
-            tag("Sub"),
-            tag("Mul"),
-            tag("Div"),
+            tag("load"),
+            tag("store"),
+            tag("pop"),
+            tag("rePush"),
+            tag("noOp"),
+            tag("add"),
+            tag("sub"),
+            tag("mul"),
+            tag("div"),
         )),
     )(input)
     .map(|(next_input, res)| {
         (
             next_input,
             Statement::Ins(match res {
-                "Load" => Load,
-                "Store" => Store,
-                "Pop" => Pop,
-                "RePush" => RePush,
-                "Add" => Add,
-                "Sub" => Sub,
-                "Mul" => Mul,
-                "Div" => Div,
-                "NoOp" => NoOp,
+                "load" => Load,
+                "store" => Store,
+                "pop" => Pop,
+                "rePush" => RePush,
+                "add" => Add,
+                "sub" => Sub,
+                "mul" => Mul,
+                "div" => Div,
+                "noOp" => NoOp,
                 _ => panic!("plain instruction tried to parse an non plain instruciton"),
             }),
         )
@@ -157,7 +165,7 @@ mod test {
     use super::*;
     #[test]
     fn test_code() {
-        let res = code("Goto END\r\n!![END] RePush");
+        let res = code("goto END\r\n!![END] rePush");
         assert_eq!(
             res,
             Ok((
@@ -177,7 +185,7 @@ mod test {
 
     #[test]
     fn test_statement() {
-        let res = statement("!![END] Mul");
+        let res = statement("!![END] mul");
         assert_eq!(
             res,
             Ok((
@@ -192,7 +200,7 @@ mod test {
 
     #[test]
     fn test_labled_ins() {
-        let res = labled_ins("!![END] Mul");
+        let res = labled_ins("!![END] mul");
         assert_eq!(
             res,
             Ok((
@@ -207,15 +215,15 @@ mod test {
 
     #[test]
     fn test_goto() {
-        let mut res = goto("Goto END");
+        let mut res = goto("goto END");
         assert_eq!(res, Ok(("", Statement::Goto("END"))));
-        res = goto("GotoIfEqual TopOfLoop");
-        assert_eq!(res, Ok(("", Statement::GotoIfEqual("TopOfLoop"))));
+        res = goto("gotoEqual TopOfLoop");
+        assert_eq!(res, Ok(("", Statement::GotoEqual("TopOfLoop"))));
     }
 
     #[test]
     fn test_push() {
-        let res = push("Push -50");
+        let res = push("push -50");
         assert_eq!(res, Ok(("", Statement::Ins(Push(-50)))))
     }
 }

@@ -1,22 +1,22 @@
-Push 7
-RePush
-Push 2
-Store
-Push 3
-RePush
-GotoIfEqual ZEROEND
-!![TOPOFLOOP] Push -1
-Add
-RePush
-Push 1
-NoOp
-Store
-GotoIfEqual END
-Push 2
-Load
-Add
-Push 1
-Load
-Goto TOPOFLOOP
-!![ZEROEND] Push 0
-!![END] RePush
+push 7
+rePush
+push 2
+store
+push 3
+rePush
+gotoEqual ZEROEND
+!![TOPOFLOOP] push -1
+add
+rePush
+push 1
+noOp
+store
+gotoEqual END
+push 2
+load
+add
+push 1
+load
+goto TOPOFLOOP
+!![ZEROEND] push 0
+!![END] rePush

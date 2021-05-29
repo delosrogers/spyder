@@ -34,7 +34,7 @@ pub enum Instruction {
     Pop,
     Goto,
     // pops sentinal off stack
-    GotoIfEqual,
+    GotoEqual,
     // Pushes a second copy of what is at the top of the stack
     RePush,
     NoOp,

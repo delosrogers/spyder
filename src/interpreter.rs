@@ -64,7 +64,7 @@ impl Interpreter {
                     // need to subtract 1 because i is incremented every time
                     self.curr_instruction_idx = new_line as usize - 1;
                 }
-                GotoIfEqual => {
+                GotoEqual => {
                     let new_line = self.pop()?;
                     let sentinal = self.pop()?;
                     if sentinal == 0 {

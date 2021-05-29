@@ -1,8 +1,0 @@
-Push 288
-RePush
-Push 2
-Store
-Push 28434232
-RePush
-GotoIfEqual ZEROEND
-!![TOPOFLOOP] Push 1

@@ -26,10 +26,10 @@ pub fn lower_IR(input: &Code) -> Result<Vec<Instruction>, ExecError> {
                 labels_resolved.push(Instruction::Push(0));
                 labels_resolved.push(Instruction::Goto);
             }
-            Statement::GotoIfEqual(goto_if_equal) => {
+            Statement::GotoEqual(goto_if_equal) => {
                 label_refs.push((*goto_if_equal, i));
                 labels_resolved.push(Instruction::Push(0));
-                labels_resolved.push(Instruction::GotoIfEqual);
+                labels_resolved.push(Instruction::GotoEqual);
             }
             Statement::Ins(instruction) => labels_resolved.push(instruction.clone()),
         }
