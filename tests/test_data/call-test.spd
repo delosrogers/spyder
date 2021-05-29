@@ -1,0 +1,24 @@
+push 5
+push 1
+store
+push 10
+push 2
+store
+call multiply
+push 3
+load
+goto end
+//
+//
+// multiply function
+!![multiply] push 1
+load
+push 2
+load
+mul
+push 3
+store
+return
+//
+// exit point
+!![end] noOp

@@ -6,10 +6,11 @@ use crate::types::{Instruction, Instruction::*};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alphanumeric1, digit1, line_ending},
+    character::complete::{alphanumeric1, digit1, line_ending, not_line_ending},
     combinator::opt,
     error::{context, VerboseError},
-    multi::many1,
+    multi::{many1, separated_list0},
+    nom_println,
     sequence::{separated_pair, tuple},
     IResult,
 };
@@ -22,11 +23,46 @@ pub struct Code<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Statement<'a> {
     Ins(Instruction),
+    VarExpr(VariableExpr<'a>),
     // you cannot label a goto or goto if equal
     LabeledIns(LabeledIns<'a>),
     Goto(Label<'a>),
     GotoEqual(Label<'a>),
-    // Call(Label<'a>),
+    Call(Label<'a>),
+    Comment(&'a str),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VariableExpr<'a> {
+    Assignment(Assignment<'a>),
+    Access(VarAccess<'a>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Assignment<'a> {
+    pub name: &'a str,
+    pub value: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VarAccess<'a> {
+    pub load_or_store: LoadOrStore,
+    pub name: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LoadOrStore {
+    Load,
+    Store,
+}
+
+impl LoadOrStore {
+    pub fn get_value(&self) -> Instruction {
+        match self {
+            Self::Load => Instruction::Load,
+            Self::Store => Instruction::Store,
+        }
+    }
 }
 
 pub type Label<'a> = &'a str;
@@ -55,7 +91,15 @@ pub fn code(input: &str) -> Res<&str, Code> {
 fn statement(input: &str) -> Res<&str, Statement> {
     context(
         "instruction",
-        alt((labled_ins, goto, push, plain_statement)),
+        alt((
+            labled_ins,
+            goto,
+            push,
+            call,
+            comment,
+            variable_expression,
+            plain_statement,
+        )),
     )(input)
 }
 
@@ -98,12 +142,10 @@ fn goto(input: &str) -> Res<&str, Statement> {
     })
 }
 
-// fn call(input: &str) -> Res<&str, Statement> {
-//     context(
-//         "call"
-//         tuple( )
-//     )
-// }
+fn call(input: &str) -> Res<&str, Statement> {
+    context("call", separated_pair(tag("call"), tag(" "), alphanumeric1))(input)
+        .map(|(next_input, res)| (next_input, Statement::Call(res.1)))
+}
 
 fn push(input: &str) -> Res<&str, Statement> {
     context("push", separated_pair(tag("push"), tag(" "), number))(input).map(
@@ -125,6 +167,54 @@ fn number(input: &str) -> Res<&str, i64> {
     )
 }
 
+fn variable_expression(input: &str) -> Res<&str, Statement> {
+    context("expression with variables", alt((assignment, load_store)))(input)
+        .map(|(next_input, res)| (next_input, Statement::VarExpr(res)))
+}
+
+fn assignment(input: &str) -> Res<&str, VariableExpr> {
+    context(
+        "assignment",
+        tuple((
+            tag("var "),
+            separated_pair(alphanumeric1, tag(" = "), number),
+        )),
+    )(input)
+    .map(|(next_input, res)| {
+        (
+            next_input,
+            VariableExpr::Assignment(Assignment {
+                name: res.1 .0,
+                value: res.1 .1,
+            }),
+        )
+    })
+}
+
+fn load_store(input: &str) -> Res<&str, VariableExpr> {
+    context(
+        "load store",
+        separated_pair(
+            alt((tag("load"), tag("store"))),
+            opt(tag(" ")),
+            opt(alphanumeric1),
+        ),
+    )(input)
+    .map(|(next_input, res)| {
+        (
+            next_input,
+            VariableExpr::Access(VarAccess {
+                load_or_store: match res.0 {
+                    "load" => LoadOrStore::Load,
+                    "store" => LoadOrStore::Store,
+                    _ => panic!("load_store parser got something other than load store"),
+                },
+                name: res.1,
+            }),
+        )
+    })
+}
+
 /// Parses parameter less instructions into Instruction
 /// i.e. not Push or Goto
 fn plain_statement(input: &str) -> Res<&str, Statement> {
@@ -136,6 +226,7 @@ fn plain_statement(input: &str) -> Res<&str, Statement> {
             tag("pop"),
             tag("rePush"),
             tag("noOp"),
+            tag("return"),
             tag("add"),
             tag("sub"),
             tag("mul"),
@@ -150,6 +241,7 @@ fn plain_statement(input: &str) -> Res<&str, Statement> {
                 "store" => Store,
                 "pop" => Pop,
                 "rePush" => RePush,
+                "return" => Goto,
                 "add" => Add,
                 "sub" => Sub,
                 "mul" => Mul,
@@ -160,18 +252,25 @@ fn plain_statement(input: &str) -> Res<&str, Statement> {
         )
     })
 }
+
+fn comment(input: &str) -> Res<&str, Statement> {
+    context("comment", tuple((tag("//"), not_line_ending)))(input)
+        .map(|(next_input, res)| (next_input, Statement::Comment(res.1)))
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     #[test]
     fn test_code() {
-        let res = code("goto END\r\n!![END] rePush");
+        let res = code("// comment here\r\ngoto END\r\n!![END] rePush");
         assert_eq!(
             res,
             Ok((
                 "",
                 Code {
                     lines: vec![
+                        Statement::Comment(" comment here"),
                         Statement::Goto("END"),
                         Statement::LabeledIns(LabeledIns {
                             label: "END",
@@ -225,5 +324,77 @@ mod test {
     fn test_push() {
         let res = push("push -50");
         assert_eq!(res, Ok(("", Statement::Ins(Push(-50)))))
+    }
+
+    #[test]
+    fn test_call() {
+        let res = call("call PerformCalc2");
+        assert_eq!(res, Ok(("", Statement::Call("PerformCalc2"))));
+    }
+    #[test]
+    fn test_var_assignment() {
+        let res = assignment("var foo = 5");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                VariableExpr::Assignment(Assignment {
+                    name: "foo",
+                    value: 5,
+                })
+            ))
+        );
+    }
+
+    #[test]
+    fn test_load() {
+        let mut res = load_store("load foo");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                VariableExpr::Access(VarAccess {
+                    load_or_store: LoadOrStore::Load,
+                    name: Some("foo"),
+                })
+            ))
+        );
+        res = load_store("load");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                VariableExpr::Access(VarAccess {
+                    load_or_store: LoadOrStore::Load,
+                    name: None,
+                })
+            ))
+        );
+    }
+
+    #[test]
+    fn test_store() {
+        let mut res = load_store("store foo");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                VariableExpr::Access(VarAccess {
+                    load_or_store: LoadOrStore::Store,
+                    name: Some("foo"),
+                })
+            ))
+        );
+        res = load_store("store");
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                VariableExpr::Access(VarAccess {
+                    load_or_store: LoadOrStore::Store,
+                    name: None,
+                })
+            ))
+        );
     }
 }

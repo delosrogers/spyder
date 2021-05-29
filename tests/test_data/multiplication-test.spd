@@ -5,6 +5,9 @@ store
 push 3
 rePush
 gotoEqual ZEROEND
+// a loop used to do repeted addition
+//
+//
 !![TOPOFLOOP] push -1
 add
 rePush

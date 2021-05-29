@@ -72,6 +72,7 @@ impl Interpreter {
                     }
                 }
                 RePush => self.stack.push(self.last()?),
+                ClearStack => self.stack = vec![],
                 Add => {
                     let arg1 = self.pop()?;
                     let arg2 = self.pop()?;

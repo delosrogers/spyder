@@ -1,0 +1,8 @@
+var foo = 5
+var bar = 10
+var baz = 0
+load foo
+load bar
+add
+store bar
+load bar
