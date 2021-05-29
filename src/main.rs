@@ -1,4 +1,4 @@
-use firstlang::run_file;
+use spyder::run_file;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
