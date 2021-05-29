@@ -1,3 +1,7 @@
+// Copyright 2021 The Spyder Authors.
+// Use of this source code is governed by the MIT License which can be
+// found in the LICENSE file.
+
 use crate::types::{ExecError, Instruction, Instruction::*};
 
 pub struct Interpreter {
