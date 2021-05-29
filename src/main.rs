@@ -1,10 +1,4 @@
-pub mod codegen;
-pub mod interpreter;
-pub mod parser;
-pub mod types;
-use crate::interpreter::Interpreter;
-use std::fs;
-use std::str;
+use firstlang::run_file;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -17,12 +11,6 @@ pub struct Cli {
 
 fn main() {
     let args = Cli::from_args();
-    let file = fs::read_to_string(&args.path).expect("problem reading file");
-    let contents: Vec<&str> = file.lines().collect();
-    let parsed = parser::code(file.as_str()).expect("parser error").1;
-    let lowered = codegen::lowerIR(&parsed).expect("parser error");
-    println!("{:?}", lowered);
-    let mut vm = Interpreter::new();
-    let result = vm.run(lowered, args.debug);
+    let result = run_file(&args.path, args.debug);
     println!("{:?}", result);
 }

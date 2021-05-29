@@ -1,0 +1,31 @@
+
+Push 7
+Push 1
+Store
+Push 3
+Push 2
+RePush
+Store
+GotoG DoneInverting
+GotoE DoneInverting
+Push 0
+Push 1
+Load
+Sub
+Push 1
+Store
+!![DoneInverting] NoOp
+GotoE ZeroEnd
+!![TopOfLoop] Push 1
+Load
+Push 2
+Load
+Push -1
+Add
+Repush
+GotoE Exit
+Push 2
+Store
+Push 1
+Load
+

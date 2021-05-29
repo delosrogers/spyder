@@ -1,4 +1,3 @@
-use crate::parser;
 use crate::types::{ExecError, Instruction, Instruction::*};
 
 pub struct Interpreter {

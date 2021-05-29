@@ -1,4 +1,4 @@
-use crate::types::{ExecError, Instruction, Instruction::*};
+use crate::types::{Instruction, Instruction::*};
 use nom::{
     branch::alt,
     bytes::complete::tag,

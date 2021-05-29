@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
-use crate::parser::{Code, LabeledIns, Statement};
+use crate::parser::{Code, Statement};
 use crate::types::{ExecError, Instruction};
 
-pub fn lowerIR(input: &Code) -> Result<Vec<Instruction>, ExecError> {
+#[allow(non_snake_case)]
+pub fn lower_IR(input: &Code) -> Result<Vec<Instruction>, ExecError> {
     let mut labels: HashMap<&str, usize> = HashMap::new();
 
     // stores the label and index of the push that should

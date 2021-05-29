@@ -1,6 +1,4 @@
 use std::fmt;
-
-use nom;
 #[derive(Debug)]
 pub struct ExecError {
     details: String,
