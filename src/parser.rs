@@ -127,6 +127,7 @@ fn plain_statement(input: &str) -> Res<&str, Statement> {
             tag("Store"),
             tag("Pop"),
             tag("RePush"),
+            tag("NoOp"),
             tag("Add"),
             tag("Sub"),
             tag("Mul"),

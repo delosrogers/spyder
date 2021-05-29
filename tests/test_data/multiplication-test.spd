@@ -9,6 +9,7 @@ GotoIfEqual ZEROEND
 Add
 RePush
 Push 1
+NoOp
 Store
 GotoIfEqual END
 Push 2
