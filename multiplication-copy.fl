@@ -1,8 +1,8 @@
-Push 288
+Push 7
 RePush
 Push 2
 Store
-Push 28434232
+Push 3
 RePush
 GotoIfEqual ZEROEND
 !![TOPOFLOOP] Push -1

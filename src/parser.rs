@@ -12,7 +12,7 @@ use nom::{
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Code<'a> {
-    lines: Vec<Statement<'a>>,
+    pub lines: Vec<Statement<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,8 +28,8 @@ pub type Label<'a> = &'a str;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LabeledIns<'a> {
-    label: Label<'a>,
-    ins: Instruction,
+    pub label: Label<'a>,
+    pub ins: Instruction,
 }
 
 type Res<T, U> = IResult<T, U, VerboseError<T>>;

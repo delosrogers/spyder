@@ -1,3 +1,4 @@
+pub mod codegen;
 pub mod interpreter;
 pub mod parser;
 pub mod types;
@@ -19,8 +20,9 @@ fn main() {
     let file = fs::read_to_string(&args.path).expect("problem reading file");
     let contents: Vec<&str> = file.lines().collect();
     let parsed = parser::code(file.as_str()).expect("parser error").1;
-    println!("{:?}", parsed);
-    // let mut vm = Interpreter::new();
-    // let result = vm.run(contents, args.debug);
-    // println!("{:?}", result);
+    let lowered = codegen::lowerIR(&parsed).expect("parser error");
+    println!("{:?}", lowered);
+    let mut vm = Interpreter::new();
+    let result = vm.run(lowered, args.debug);
+    println!("{:?}", result);
 }

@@ -33,13 +33,7 @@ impl Interpreter {
             None => Err(self.empty_stack_err()),
         }
     }
-    pub fn run(&mut self, code: Vec<&str>, debug: bool) -> Result<i64, ExecError> {
-        let instructions: Vec<Instruction> = code
-            .into_iter()
-            .map(|instruction_str| {
-                parser::parse_instruction(instruction_str).expect("problem parsing")
-            })
-            .collect();
+    pub fn run(&mut self, instructions: Vec<Instruction>, debug: bool) -> Result<i64, ExecError> {
         while self.curr_instruction_idx < instructions.len() {
             let instruction = &instructions[self.curr_instruction_idx];
             if debug {
