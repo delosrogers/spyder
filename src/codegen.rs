@@ -22,7 +22,7 @@ impl<'a> CodeGen<'a> {
     pub fn lower_IR(&mut self, input: &'a Code) -> Result<Vec<Instruction>, ExecError> {
         for stmt in input.lines.iter() {
             self.curr_base_idx = self.labels_resolved.len();
-            self.lower_statement(stmt);
+            self.lower_statement(stmt)?;
         }
         // fill in go to destinations using labels map
         for (label, position) in self.label_refs.iter() {
