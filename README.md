@@ -1,4 +1,4 @@
-[![build](https://github.com/delosrogers/spyder/actions/workflows/rust.yml/badge.svg)](https://github.com/delosrogers/spyder/actions/workflows/rust.yml)
+[![Build](https://github.com/delosrogers/spyder/actions/workflows/Build-rust.yml/badge.svg)](https://github.com/delosrogers/spyder/actions/workflows/rust.yml)
 # Spyder
 A basic stack based interpreted language/bytecode format.
 
