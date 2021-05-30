@@ -33,5 +33,3 @@ mandatory.
 ```
 !![<label>] <instruction>
 ```
-note, you cannot put a label on a `goto` or `gotoEqual` if you would like to to
-this just precede it with a `noOp` and jump there.

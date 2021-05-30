@@ -22,34 +22,7 @@ impl<'a> CodeGen<'a> {
     pub fn lower_IR(&mut self, input: &'a Code) -> Result<Vec<Instruction>, ExecError> {
         for stmt in input.lines.iter() {
             self.curr_base_idx = self.labels_resolved.len();
-            match stmt {
-                Statement::LabeledIns(labled_ins) => {
-                    self.labels.insert(labled_ins.label, self.curr_base_idx);
-                    self.labels_resolved.push(labled_ins.ins.clone());
-                }
-                Statement::Goto(goto) => {
-                    self.label_refs.push((*goto, self.curr_base_idx));
-                    self.labels_resolved.push(Instruction::Push(0));
-                    self.labels_resolved.push(Instruction::Goto);
-                }
-                Statement::GotoEqual(goto_if_equal) => {
-                    self.label_refs.push((*goto_if_equal, self.curr_base_idx));
-                    self.labels_resolved.push(Instruction::Push(0));
-                    self.labels_resolved.push(Instruction::GotoEqual);
-                }
-                Statement::Call(label) => {
-                    // push return addr
-                    self.labels_resolved.push(Instruction::ClearStack);
-                    self.labels_resolved
-                        .push(Instruction::Push((self.curr_base_idx + 4) as i64));
-                    self.label_refs.push((*label, self.curr_base_idx + 2));
-                    self.labels_resolved.push(Instruction::Push(0));
-                    self.labels_resolved.push(Instruction::Goto);
-                }
-                Statement::VarExpr(var_expr) => self.lower_var_expr(var_expr)?,
-                Statement::Ins(instruction) => self.labels_resolved.push(instruction.clone()),
-                Statement::Comment(_) => (),
-            }
+            self.lower_statement(stmt);
         }
         // fill in go to destinations using labels map
         for (label, position) in self.label_refs.iter() {
@@ -64,6 +37,39 @@ impl<'a> CodeGen<'a> {
             self.labels_resolved[*position] = Instruction::Push(jump_dest as i64)
         }
         Ok(self.labels_resolved.clone())
+    }
+
+    fn lower_statement(&mut self, stmt: &'a Statement) -> Result<(), ExecError> {
+        match stmt {
+            Statement::LabeledStatement(labled_statement) => {
+                self.labels
+                    .insert(labled_statement.label, self.curr_base_idx);
+                self.lower_statement(&*labled_statement.statement)?;
+            }
+            Statement::Goto(goto) => {
+                self.label_refs.push((*goto, self.curr_base_idx));
+                self.labels_resolved.push(Instruction::Push(0));
+                self.labels_resolved.push(Instruction::Goto);
+            }
+            Statement::GotoEqual(goto_if_equal) => {
+                self.label_refs.push((*goto_if_equal, self.curr_base_idx));
+                self.labels_resolved.push(Instruction::Push(0));
+                self.labels_resolved.push(Instruction::GotoEqual);
+            }
+            Statement::Call(label) => {
+                // push return addr
+                self.labels_resolved.push(Instruction::ClearStack);
+                self.labels_resolved
+                    .push(Instruction::Push((self.curr_base_idx + 4) as i64));
+                self.label_refs.push((*label, self.curr_base_idx + 2));
+                self.labels_resolved.push(Instruction::Push(0));
+                self.labels_resolved.push(Instruction::Goto);
+            }
+            Statement::VarExpr(var_expr) => self.lower_var_expr(var_expr)?,
+            Statement::Ins(instruction) => self.labels_resolved.push(instruction.clone()),
+            Statement::Comment(_) => (),
+        }
+        Ok(())
     }
 
     fn lower_var_expr(&mut self, var_expr: &'a VariableExpr) -> Result<(), ExecError> {

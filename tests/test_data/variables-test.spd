@@ -1,8 +1,20 @@
-var foo = 5
-var bar = 10
-var baz = 0
-load foo
-load bar
+var param1 = 7
+var param2 = 3
+load param2
+// test if param2 is zero and return zero if it is
+gotoEqual ZEROEND
+load param1
+//
+//
+// repeated addition
+!![TOPOFLOOP] load param2
+push -1
 add
-store bar
-load bar
+rePush
+store param2
+gotoEqual END
+load param1
+add
+goto TOPOFLOOP
+!![ZEROEND] push 0
+!![END] noOp

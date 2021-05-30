@@ -9,8 +9,7 @@ use nom::{
     character::complete::{alphanumeric1, digit1, line_ending, not_line_ending},
     combinator::opt,
     error::{context, VerboseError},
-    multi::{many1, separated_list0},
-    nom_println,
+    multi::many1,
     sequence::{separated_pair, tuple},
     IResult,
 };
@@ -25,7 +24,7 @@ pub enum Statement<'a> {
     Ins(Instruction),
     VarExpr(VariableExpr<'a>),
     // you cannot label a goto or goto if equal
-    LabeledIns(LabeledIns<'a>),
+    LabeledStatement(LabeledStatement<'a>),
     Goto(Label<'a>),
     GotoEqual(Label<'a>),
     Call(Label<'a>),
@@ -68,9 +67,9 @@ impl LoadOrStore {
 pub type Label<'a> = &'a str;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LabeledIns<'a> {
+pub struct LabeledStatement<'a> {
     pub label: Label<'a>,
-    pub ins: Instruction,
+    pub statement: Box<Statement<'a>>,
 }
 
 type Res<T, U> = IResult<T, U, VerboseError<T>>;
@@ -111,12 +110,9 @@ fn labled_ins(input: &str) -> Res<&str, Statement> {
     .map(|(next_input, res)| {
         (
             next_input,
-            Statement::LabeledIns(LabeledIns {
+            Statement::LabeledStatement(LabeledStatement {
                 label: res.1,
-                ins: match res.3 {
-                    Statement::Ins(instruction) => instruction,
-                    _ => panic!("statement following label should be a plain ins"),
-                },
+                statement: Box::new(res.3),
             }),
         )
     })
@@ -272,9 +268,9 @@ mod test {
                     lines: vec![
                         Statement::Comment(" comment here"),
                         Statement::Goto("END"),
-                        Statement::LabeledIns(LabeledIns {
+                        Statement::LabeledStatement(LabeledStatement {
                             label: "END",
-                            ins: RePush
+                            statement: Box::new(Statement::Ins(RePush)),
                         })
                     ]
                 }
@@ -289,9 +285,9 @@ mod test {
             res,
             Ok((
                 "",
-                Statement::LabeledIns(LabeledIns {
+                Statement::LabeledStatement(LabeledStatement {
                     label: "END",
-                    ins: Mul,
+                    statement: Box::new(Statement::Ins(Mul)),
                 })
             ))
         )
@@ -304,9 +300,9 @@ mod test {
             res,
             Ok((
                 "",
-                Statement::LabeledIns(LabeledIns {
+                Statement::LabeledStatement(LabeledStatement {
                     label: "END",
-                    ins: Mul,
+                    statement: Box::new(Statement::Ins(Mul))
                 })
             ))
         )
